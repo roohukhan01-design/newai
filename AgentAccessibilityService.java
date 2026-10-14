@@ -132,12 +132,8 @@ public class AgentAccessibilityService extends AccessibilityService {
     private String confirmMode() { return getSharedPreferences("roohu", MODE_PRIVATE).getString("confirm", "money"); }
 
     private boolean risky(String t) {
-        String mode = confirmMode();
-        if (mode.equals("off")) return false;
-        for (String w : t.toLowerCase(Locale.ROOT).split("[^a-z]+")) {
-            for (String r : MONEY) if (w.equals(r)) return true;
-            if (mode.equals("all")) for (String r : MSG) if (w.equals(r)) return true;
-        }
+        for (String w : t.toLowerCase(Locale.ROOT).split("[^a-z]+"))
+            for (String r : RISKY) if (w.equals(r)) return true;
         return false;
     }
 
@@ -167,6 +163,7 @@ public class AgentAccessibilityService extends AccessibilityService {
             }
         } catch (Exception e) { }
         lastNodes = keep;
+        lastItems = keep;
         lastScreen = a.toString();
         return a.length();
     }
@@ -204,7 +201,7 @@ public class AgentAccessibilityService extends AccessibilityService {
     }
 
     private boolean tapIdx(String t) {
-        try { return clickNode(lastItems.get(Integer.parseInt(t.substring(1).trim()))); } catch (Exception e) { return false; }
+        try { return tapNode(lastItems.get(Integer.parseInt(t.substring(1).trim()))); } catch (Exception e) { return false; }
     }
 
     private void settle() throws InterruptedException {
@@ -555,7 +552,7 @@ public class AgentAccessibilityService extends AccessibilityService {
             if (repeat >= 2) { addLog("SAY I am stuck on this step. Tell me what to do next."); return; }
             String lab = a.equals("tap") ? labelFor(t) : t;
             addLog((i + 1) + ". " + a + " " + lab);
-            if (a.equals("tap") && risky(lab) && !confirm("tap \"" + lab + "\"")) { addLog("Not allowed. Stopped."); return; }
+            if (a.equals("tap") && needsAsk(lab) && !confirm("tap \"" + lab + "\"")) { addLog("Not allowed. Stopped."); return; }
             String r = step(a, t);
             addLog("   " + r);
             hist.append(a).append(' ').append(lab).append(r.startsWith("FAIL") ? " -> FAILED; " : " -> ok; ");
